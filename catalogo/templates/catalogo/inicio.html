@@ -1,0 +1,56 @@
+{% extends 'catalogo/base.html' %}
+{% load static %}
+{% block title %}Bienvenido - {{ block.super }}{% endblock %}
+{% block content %}
+
+<div id="exhibitionCarousel" class="carousel slide" data-bs-ride="carousel">
+  <div class="carousel-inner" style="border-radius: 15px;">
+    <div class="carousel-item active">
+      <img src="{% static 'catalogo/bienvenida.jpg' %}" class="d-block w-100" alt="Bienvenida al Museo" style="max-height: 400px; object-fit: cover;">
+      <div class="carousel-caption d-none d-md-block">
+        <h1>Te damos la Bienvenida al Museo de Arte</h1>
+        <p>Un espacio donde la historia y la creatividad convergen.</p>
+      </div>
+    </div>
+
+    {% for exhibicion in exhibiciones %}
+    <div class="carousel-item">
+      {% if exhibicion.imagen %}
+      <img src="{{ exhibicion.imagen.url }}" class="d-block w-100" alt="{{ exhibicion.nombre }}" style="max-height: 400px; object-fit: cover;">
+      {% endif %}
+      <div class="carousel-caption d-none d-md-block">
+        <h5>{{ exhibicion.nombre }}</h5>
+        <p>{{ exhibicion.descripcion }} (Del {{ exhibicion.fecha_inicio|date:"d/m" }} al {{ exhibicion.fecha_fin|date:"d/m" }})</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#exhibitionCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#exhibitionCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>
+
+<div class="mt-5">
+  <h2 class="text-center mb-4">Nuevas Adquisiciones</h2>
+  <div class="row row-cols-1 row-cols-md-3 row-cols-lg-6 g-4">
+    {% for obra in obras_recientes %}
+      <div class="col">
+        <div class="card h-100 shadow-sm">
+          <a href="{% url 'detalle_obra' pk=obra.pk %}">
+            <img src="{{ obra.imagen.url }}" class="card-img-top" alt="{{ obra.titulo }}" style="height: 150px; object-fit: cover;">
+          </a>
+          <div class="card-body p-2 text-center">
+            <h6 class="card-title small mb-0">{{ obra.titulo }}</h6>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

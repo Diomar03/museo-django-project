@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Reporte de Mantenimiento Preventivo</h1>
+<p>Mostrando obras con 5 años o más desde su última restauración o fecha de entrada.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Obra</th>
+      <th>Autor</th>
+      <th>Última Restauración (o Entrada)</th>
+      <th>Años Transcurridos</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for obra in obras_para_mantenimiento %}
+    <tr class="{% cycle 'row1' 'row2' %}">
+      <td><a href="/admin/catalogo/obradearte/{{ obra.id }}/change/">{{ obra.titulo }}</a></td>
+      <td>{{ obra.autor }}</td>
+      <td>{{ obra.fecha_ultima_restauracion_o_entrada }}</td>
+      <td>{{ obra.anios_desde_ultima_restauracion }} años</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

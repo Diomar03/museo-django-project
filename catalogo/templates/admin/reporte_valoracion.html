@@ -1,0 +1,17 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<h1>Reporte de Valoración Total de la Colección</h1>
+<div id="content-main">
+  <div class="module">
+    <h2>Valor Total Estimado</h2>
+    <div class="form-row">
+        <p style="font-size: 24px; font-weight: bold;">
+            S/ {{ total_valor|floatformat:2 }}
+        </p>
+    </div>
+    <p>Este valor representa la suma de la 'Valoración Económica' de todas las obras de arte registradas en el sistema.</p>
+  </div>
+</div>
+{% endblock %}

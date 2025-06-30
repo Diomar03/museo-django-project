@@ -1,0 +1,59 @@
+{% extends 'catalogo/base.html' %}
+{% load static %}
+
+{% block title %}{{ obra.titulo }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6 text-center">
+                {% if obra.imagen %}
+                    <img src="{{ obra.imagen.url }}" class="img-fluid rounded" alt="{{ obra.titulo }}" style="max-height: 70vh; object-fit: contain;">
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 400px;">
+                        <span class="text-muted">Sin imagen disponible</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <h1 class="display-5">{{ obra.titulo }}</h1>
+                <p class="lead text-muted">de {{ obra.autor }}</p>
+
+                <hr>
+
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Periodo:</strong>
+                        <span>{{ obra.periodo.nombre }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Estilo:</strong>
+                        <span>{{ obra.estilo.nombre }}</span>
+                    </li>
+                    {% if obra.tipo_obra == 'CU' %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>Técnica:</strong>
+                            <span>{{ obra.tecnica.nombre }}</span>
+                        </li>
+                    {% elif obra.tipo_obra == 'ES' %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <strong>Material:</strong>
+                            <span>{{ obra.material.nombre }}</span>
+                        </li>
+                    {% endif %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Fecha de Creación:</strong>
+                        <span>{{ obra.fecha_creacion }}</span>
+                    </li>
+                </ul>
+
+                <div class="mt-4">
+                    <a href="{% url 'lista_obras' %}" class="btn btn-outline-secondary">&larr; Volver al Catálogo</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

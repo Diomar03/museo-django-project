@@ -1,0 +1,123 @@
+{% extends 'catalogo/base.html' %}
+
+{% block title %}Catálogo de Obras - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="text-center mb-4">
+    <h1>Catálogo de Obras de Arte</h1>
+    <p class="lead">Explora nuestra colección</p>
+</div>
+
+{% if exhibiciones %}
+<div class="exhibitions-section card mb-4">
+    <div class="card-header text-center" style="background-color: #e3f2fd;">
+        <h2 class="h4 mb-0">Exhibiciones Especiales</h2>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for exhibicion in exhibiciones %}
+            <div class="col-md-6 mb-3">
+                <div class="border p-3 rounded h-100">
+                    <h3 class="h5">{{ exhibicion.nombre }}</h3>
+                    <p class="small text-muted">{{ exhibicion.descripcion }}</p>
+                    <p><em>Del {{ exhibicion.fecha_inicio|date:"d/m/Y" }} al {{ exhibicion.fecha_fin|date:"d/m/Y" }}</em></p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+<div class="filters card card-body mb-4">
+    <form method="GET" action="{% url 'lista_obras' %}" class="row g-3 align-items-center">
+        <div class="col-lg-3">
+            <input type="text" name="q" class="form-control" placeholder="Buscar por título o autor..." value="{{ query|default:'' }}">
+        </div>
+        <div class="col-md">
+            <select name="tipo" class="form-select">
+                <option value="">Todo Tipo de Obra</option>
+                <option value="CU" {% if tipo_seleccionado == 'CU' %}selected{% endif %}>Cuadro</option>
+                <option value="ES" {% if tipo_seleccionado == 'ES' %}selected{% endif %}>Escultura</option>
+            </select>
+        </div>
+        <div class="col-md">
+            <select name="sala" class="form-select">
+                <option value="">Todas las Salas</option>
+                {% for sala in salas %}
+                    <option value="{{ sala.id }}" {% if sala_seleccionada_id == sala.id|stringformat:"s" %}selected{% endif %}>{{ sala.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md">
+            <select name="periodo" class="form-select">
+                <option value="">Todos los Periodos</option>
+                {% for p in periodos %}
+                    <option value="{{ p.id }}" {% if periodo_seleccionado_id == p.id|stringformat:"s" %}selected{% endif %}>{{ p.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md">
+            <select name="estilo" class="form-select">
+                <option value="">Todos los Estilos</option>
+                {% for e in estilos %}
+                    <option value="{{ e.id }}" {% if estilo_seleccionado_id == e.id|stringformat:"s" %}selected{% endif %}>{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-auto">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for obra in page_obj %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <a href="{% url 'detalle_obra' pk=obra.pk %}">
+                    {% if obra.imagen %}
+                        <img src="{{ obra.imagen.url }}" class="card-img-top" alt="{{ obra.titulo }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
+                            <span class="text-muted">Sin imagen</span>
+                        </div>
+                    {% endif %}
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title">{{ obra.titulo }}</h5>
+                    <p class="card-text text-muted">{{ obra.autor }}</p>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <p class="text-center mt-4">No se encontraron obras que coincidan con tu búsqueda.</p>
+        </div>
+    {% endfor %}
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Paginación de obras" class="mt-5">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page=1&{{ params_url }}">&laquo;</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ params_url }}">‹</a></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}&{{ params_url }}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ params_url }}">›</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&{{ params_url }}">&raquo;</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

@@ -13,4 +13,7 @@ urlpatterns = [
 
     # Añadimos la ruta para la página de "Nosotros"
     path('nosotros/', views.nosotros, name='nosotros'),
+
+    # Nueva ruta para el catálogo de un museo colaborador
+    path('museos/<int:museo_id>/catalogo/', views.catalogo_externo, name='catalogo_externo'),
 ]

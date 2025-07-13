@@ -1,0 +1,27 @@
+{% extends 'catalogo/base.html' %}
+
+{% block title %}Catálogo de {{ museo.nombre }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="text-center mb-4">
+    <h1>Catálogo del {{ museo.nombre }}</h1>
+    <p class="lead">Explorando las obras de nuestros colaboradores.</p>
+</div>
+
+<div class="alert alert-info" role="alert">
+  Esta es una página de simulación para propósitos del sistema.
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for i in "123456" %} <div class="col">
+            <div class="card h-100 shadow-sm">
+                <img src="https://via.placeholder.com/300x200.png/CCC/FFF?text=Obra+Externa+{{i}}" class="card-img-top" alt="Obra de arte externa">
+                <div class="card-body">
+                    <h5 class="card-title">Título de Obra {{i}}</h5>
+                    <p class="card-text text-muted">Autor Externo {{i}}</p>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 from django.db import models
 from datetime import date
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db.models import Q 
 # --- Tablas de Catálogo (Lookup Tables) ---
 # Estas son las listas que el Encargado del Catálogo gestionará.
@@ -51,7 +52,7 @@ class ObraDeArte(models.Model):
 
     # Atributos comunes
     titulo = models.CharField(max_length=200, unique=True, verbose_name="Título")
-    imagen = models.ImageField(upload_to='obras/', null=True, blank=True, verbose_name="Imagen de la Obra") 
+    imagen = models.ImageField(upload_to='obras/', verbose_name="Imagen de la Obra") 
     autor = models.CharField(max_length=200, verbose_name="Autor")
     valoracion_economica = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Valoración Económica (S/)")
     fecha_creacion = models.CharField(max_length=50, blank=True, verbose_name="Fecha de Creación")
@@ -147,7 +148,7 @@ class MuseoColaborador(models.Model):
     nombre = models.CharField(max_length=200, unique=True, verbose_name="Nombre del Museo")
     pais = models.CharField(max_length=100, verbose_name="País")
     ciudad = models.CharField(max_length=100, verbose_name="Ciudad")
-    persona_contacto = models.CharField(max_length=200, blank=True, verbose_name="Persona de Contacto")
+    enlace_catalogo = models.URLField(max_length=255, verbose_name="Enlace al Catálogo Externo")
 
     def __str__(self):
         return f"{self.nombre} ({self.ciudad}, {self.pais})"
@@ -157,47 +158,102 @@ class MuseoColaborador(models.Model):
         verbose_name_plural = "Museos Colaboradores"
         ordering = ['nombre']
 
+class TelefonoMuseo(models.Model):
+    museo = models.ForeignKey(MuseoColaborador, on_delete=models.CASCADE, related_name="telefonos")
+
+    # Creamos una regla de validación
+    validador_telefono = RegexValidator(
+        regex=r'^\+?[\d\s]+$', # Permite un '+' opcional al inicio, seguido de números y espacios.
+        message="El número de teléfono solo puede contener números, espacios y el símbolo '+' al inicio."
+    )
+
+    # Aplicamos la regla al campo
+    numero = models.CharField(max_length=50, validators=[validador_telefono], verbose_name="Número de Teléfono")
+
+    def __str__(self):
+        return self.numero
+
+class EmailMuseo(models.Model):
+    # Enlazamos cada email a un museo.
+    museo = models.ForeignKey(MuseoColaborador, on_delete=models.CASCADE, related_name="emails")
+    email = models.EmailField(max_length=254, verbose_name="Correo Electrónico")
+
+    def __str__(self):
+        return self.email
 
 class Cesion(models.Model):
     obra_cedida = models.ForeignKey(ObraDeArte, on_delete=models.CASCADE, related_name="cesiones", verbose_name="Obra Cedida")
     museo_destino = models.ForeignKey(MuseoColaborador, on_delete=models.PROTECT, verbose_name="Museo Destino")
-
+    
     fecha_inicio = models.DateField(verbose_name="Fecha de Inicio de la Cesión")
     fecha_fin = models.DateField(verbose_name="Fecha de Fin de la Cesión")
-
-    importe = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="Importe de la Cesión (S/)")
-
+        
     def clean(self):
-        # Validar que la obra no esté en restauración
-        if self.obra_cedida.estado == 'RE':
+        # 1. Validar que la obra no esté en restauración
+        if self.obra_cedida_id and self.obra_cedida.estado == 'RE':
             raise ValidationError(f"La obra '{self.obra_cedida.titulo}' no puede ser cedida porque está actualmente en restauración.")
 
-        # Validar que las fechas no se solapen con otras cesiones para la misma obra
-        # Buscamos cesiones de la misma obra, excluyéndonos a nosotros mismos si estamos editando
-        cesiones_existentes = Cesion.objects.filter(obra_cedida=self.obra_cedida).exclude(pk=self.pk)
-
-        for cesion_existente in cesiones_existentes:
-            # Comprobamos si hay solapamiento de fechas
-            if max(self.fecha_inicio, cesion_existente.fecha_inicio) < min(self.fecha_fin, cesion_existente.fecha_fin):
-                raise ValidationError(
-                    f"Las fechas de esta cesión se solapan con una cesión existente para esta obra "
-                    f"(del {cesion_existente.fecha_inicio.strftime('%d/%m/%Y')} al {cesion_existente.fecha_fin.strftime('%d/%m/%Y')})."
-                )
+        # 2. Validar que las fechas no se solapen con otras cesiones para la misma obra
+        if self.obra_cedida_id and self.fecha_inicio and self.fecha_fin:
+            cesiones_existentes = Cesion.objects.filter(obra_cedida=self.obra_cedida).exclude(pk=self.pk)
+            
+            for cesion_existente in cesiones_existentes:
+                # Comprobamos si hay solapamiento de fechas
+                if max(self.fecha_inicio, cesion_existente.fecha_inicio) < min(self.fecha_fin, cesion_existente.fecha_fin):
+                    raise ValidationError(
+                        f"Las fechas de esta cesión se solapan con una cesión existente para esta obra "
+                        f"(del {cesion_existente.fecha_inicio.strftime('%d/%m/%Y')} al {cesion_existente.fecha_fin.strftime('%d/%m/%Y')})."
+                    )
+    
     def save(self, *args, **kwargs):
-        # Al guardar una cesión, cambiamos el estado de la obra a 'Cedida'
-        self.obra_cedida.estado = 'CE'
-        self.obra_cedida.save()
-
-        # Luego, guardamos el objeto de la cesión como lo haría normalmente
+        # La comprobación correcta: chequear si el ID de la obra existe.
+        if self.obra_cedida_id:
+            # Si hay un ID, significa que se seleccionó una obra.
+            # Ahora sí, podemos cambiar su estado de forma segura.
+            self.obra_cedida.estado = 'CE'
+            self.obra_cedida.save()
+        
+        # El guardado normal de la cesión siempre se ejecuta.
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Cesión de '{self.obra_cedida.titulo}' a {self.museo_destino.nombre}"
+        # Comprobamos si hay una obra asignada antes de intentar acceder a su título
+        obra_titulo = self.obra_cedida.titulo if self.obra_cedida_id else "[Obra no asignada]"
+        
+        # Hacemos lo mismo para el museo
+        museo_nombre = self.museo_destino.nombre if self.museo_destino_id else "[Museo no asignado]"
+        
+        return f"Cesión de '{obra_titulo}' a {museo_nombre}"
 
     class Meta:
         verbose_name = "Cesión"
         verbose_name_plural = "Cesiones"
         ordering = ['-fecha_inicio']
+
+class SolicitudCesion(models.Model):
+    ESTADO_SOLICITUD_CHOICES = [
+        ('P', 'Pendiente'),
+        ('A', 'Aprobada'),
+        ('R', 'Rechazada'),
+    ]
+
+    obra_solicitada = models.CharField(max_length=255, verbose_name="Nombre de la Obra Solicitada")
+    museo_origen = models.ForeignKey(MuseoColaborador, on_delete=models.PROTECT, verbose_name="Museo al que se solicita")
+
+    fecha_inicio_solicitud = models.DateField(verbose_name="Fecha de Inicio")
+    fecha_fin_solicitud = models.DateField(verbose_name="Fecha de Fin")
+
+    estado = models.CharField(max_length=1, choices=ESTADO_SOLICITUD_CHOICES, default='P', verbose_name="Estado de la Solicitud")
+
+    notas = models.TextField(blank=True, verbose_name="Notas Adicionales")
+
+    def __str__(self):
+        return f"Solicitud de '{self.obra_solicitada}' a {self.museo_origen.nombre}"
+
+    class Meta:
+        verbose_name = "Solicitud de Cesión"
+        verbose_name_plural = "Solicitudes de Cesión"
+        ordering = ['-fecha_inicio_solicitud']
 
 class Exhibicion(models.Model):
     nombre = models.CharField(max_length=200, verbose_name="Nombre de la Exhibición")

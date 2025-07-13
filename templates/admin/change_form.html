@@ -1,0 +1,52 @@
+{% extends "admin/change_form.html" %}
+
+{% block after_field_sets %}
+{{ block.super }}
+
+{# Comprobamos si estamos en el modelo 'solicitudcesion' #}
+{% if opts.model_name == 'solicitudcesion' %}
+    <script>
+    // Usamos django.jQuery para asegurarnos de que funciona con la versión del admin
+    (function($) {
+        $(document).ready(function() {
+            
+
+            // El ID del campo que guarda el valor del museo
+            const museoSelector = $('#id_museo_origen');
+
+            // Verificamos que los datos de los museos se cargaron
+            const museosData = JSON.parse('{{ museos_data_json|escapejs }}');
+            
+
+            // Creamos un contenedor para nuestro enlace
+            const enlaceContainer = $('<div id="enlace-catalogo-container" style="margin-top: 10px; margin-left: 105px;"></div>');
+            // Lo insertamos después del campo del museo
+            museoSelector.closest('.form-row').append(enlaceContainer);
+
+            function actualizarEnlace() {
+                const museoId = museoSelector.val(); // .val() para obtener el valor con jQuery
+                enlaceContainer.empty(); // .empty() para limpiar con jQuery
+
+                
+
+                if (museoId && museosData[museoId]) {
+                    
+                    const enlace = $('<a></a>')
+                        .attr('href', museosData[museoId])
+                        .attr('target', '_blank')
+                        .addClass('button') // Usamos la clase de botón del admin
+                        .text('Ver Catálogo del Museo Seleccionado');
+                    enlaceContainer.append(enlace);
+                }
+            }
+
+            // Cuando el valor del campo del museo cambie, actualizamos el enlace
+            museoSelector.on('change', actualizarEnlace);
+
+            // Ejecutamos una vez al cargar la página por si ya hay un museo seleccionado (al editar)
+            actualizarEnlace();
+        });
+    })(django.jQuery);
+    </script>
+{% endif %}
+{% endblock %}

@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from .models import ObraDeArte, Sala, Periodo, Estilo, Exhibicion
 from django.core.paginator import Paginator # Para la paginación
 from django.db.models import Q # Búsquedas complejas
+from .models import MuseoColaborador
 
 def inicio(request):
     # Obtenemos todas las exhibiciones para el carrusel
@@ -87,3 +88,14 @@ def detalle_obra(request, pk):
     }
 
     return render(request, 'catalogo/detalle_obra.html', context)
+
+
+def catalogo_externo(request, museo_id):
+    # Buscamos el museo para poder mostrar su nombre
+    museo = get_object_or_404(MuseoColaborador, pk=museo_id)
+
+    context = {
+        'museo': museo,
+    }
+    # Renderizamos una plantilla genérica para todos los catálogos externos
+    return render(request, 'catalogo/catalogo_museo_externo.html', context)

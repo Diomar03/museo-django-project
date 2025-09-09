@@ -1,22 +1,52 @@
 {% extends 'catalogo/base.html' %}
 {% load static %}
+
 {% block title %}Sobre Nosotros - {{ block.super }}{% endblock %}
+
 {% block content %}
-    <h1 class="mb-4">Sobre Nuestro Museo</h1>
-    <div class="row">
-        <div class="col-md-7">
-            <h2>Nuestra Historia</h2>
-            <p>Aquí va un texto detallado sobre la historia, misión y visión del museo. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-            <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-            <h2>Horarios de Atención</h2>
-            <ul>
-                <li>Lunes a Viernes: 9:00 AM - 6:00 PM</li>
-                <li>Sábados: 10:00 AM - 8:00 PM</li>
-                <li>Domingos: Cerrado</li>
-            </ul>
-        </div>
-        <div class="col-md-5">
-            <img src="{% static 'catalogo/museo_nosotros.jpg' %}" class="img-fluid rounded shadow-sm" alt="Fachada de Nuestro Museo">
-        </div>
-    </div>
+<style>
+    .img-nosotros {
+        float: right;
+        margin-left: 20px;
+        margin-bottom: 15px;
+        max-width: 40%;
+    }
+    .texto-historia {
+        text-align: justify;
+    }
+</style>
+
+<div class="pb-2 mb-4 border-bottom text-center">
+    <h1 class="display-5">SOBRE NUESTRO MUSEO</h1>
+</div>
+
+<div>
+    <img src="{% static 'catalogo/museo_nosotros.jpg' %}" class="img-fluid rounded shadow-sm img-nosotros" alt="Interior de nuestro museo">
+
+    <h2>Nuestra Historia: Un Viaje a Través del Tiempo</h2>
+
+    <p class="texto-historia">
+        Fundado en 1985, el Museo de Arte nació del sueño compartido por un grupo de entusiastas de la historia y el arte. La visión, liderada por la Dra. Carmen Rosa Cárdenas, no era simplemente exhibir objetos, sino crear un vibrante punto de encuentro para la reflexión, el aprendizaje y la conexión de nuestra comunidad con sus raíces y con el legado cultural del mundo.
+    </p>
+    <p class="texto-historia">
+        Nuestra colección comenzó con importantes piezas de arte precolombino, fruto de descubrimientos en el valle del Rímac y de la generosidad de coleccionistas privados. Con el tiempo, esta visión se expandió para abarcar un diálogo global, incorporando obras maestras que recorren desde el Renacimiento europeo hasta las vanguardias del siglo XX. Cada pieza, ya sea una escultura milenaria o un cuadro moderno, fue seleccionada para contar una historia y provocar una emoción.
+    </p>
+    <p class="texto-historia">
+        Hoy, operando desde nuestra icónica sede en el corazón de Lima, continuamos con la misma pasión. Aspiramos a ser un espacio vivo, un puente entre el pasado y el presente, donde cada visita se convierte en un viaje personal de descubrimiento. Creemos en el poder del arte para inspirar, para cuestionar y para unir a las personas.
+    </p>
+</div>
+
+<div style="clear: both;"></div>
+
+<hr class="my-5">
+
+<div class="text-center">
+    <h2>Horarios de Atención</h2>
+    <ul class="list-unstyled">
+        <li>Lunes a Viernes: 9:00 AM - 6:00 PM</li>
+        <li>Sábados: 10:00 AM - 8:00 PM</li>
+        <li>Domingos y Feriados: Cerrado</li>
+    </ul>
+</div>
+
 {% endblock %}

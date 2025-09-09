@@ -1,18 +1,38 @@
+import json
+from datetime import date
 from django.shortcuts import render, get_object_or_404
-from .models import ObraDeArte, Sala, Periodo, Estilo, Exhibicion
+from .models import ObraDeArte, Exhibicion, Sala, Periodo, Estilo
 from django.core.paginator import Paginator # Para la paginación
 from django.db.models import Q # Búsquedas complejas
 from .models import MuseoColaborador
 
 def inicio(request):
-    # Obtenemos todas las exhibiciones para el carrusel
-    exhibiciones = Exhibicion.objects.all()
-
-    # Obtenemos las 6 obras más recientes que estén en exposición
+    # 1. Obtenemos solo las exhibiciones activas
+    exhibiciones_activas = Exhibicion.objects.filter(
+        fecha_inicio__lte=date.today(),
+        fecha_fin__gte=date.today()
+    )
+    
+    # 2. Obtenemos las obras más recientes
     obras_recientes = ObraDeArte.objects.filter(estado='EX').order_by('-fecha_entrada_museo')[:6]
+    
+    # 3. Preparamos los datos de las exhibiciones en un formato claro
+    exhibiciones_data = {}
+    for ex in exhibiciones_activas:
+        obras_list = [{'titulo': obra.titulo, 'autor': obra.autor} for obra in ex.obras_incluidas.all()]
+        
+        exhibiciones_data[ex.id] = {
+            'id': ex.id,
+            'nombre': ex.nombre,
+            'descripcion': ex.descripcion,
+            'fecha_inicio': ex.fecha_inicio.strftime('%d/%m/%Y'),
+            'fecha_fin': ex.fecha_fin.strftime('%d/%m/%Y'),
+            'imagen_url': ex.imagen.url if ex.imagen else '',
+            'obras': obras_list
+        }
 
     context = {
-        'exhibiciones': exhibiciones,
+        'exhibiciones_data': exhibiciones_data, # Pasamos el diccionario directamente
         'obras_recientes': obras_recientes,
     }
     return render(request, 'catalogo/inicio.html', context)
@@ -98,4 +118,32 @@ def catalogo_externo(request, museo_id):
         'museo': museo,
     }
     # Renderizamos una plantilla genérica para todos los catálogos externos
+    return render(request, 'catalogo/catalogo_museo_externo.html', context)
+
+def catalogo_externo(request, museo_id):
+    museo = get_object_or_404(MuseoColaborador, pk=museo_id)
+
+    # --- Base de datos simulada de obras de arte externas ---
+    datos_simulados_museos = {
+        # Datos para el Museo con ID = 1
+        1: [
+            {'titulo': 'La persistencia de la memoria', 'autor': 'Salvador Dalí', 'img': 'https://upload.wikimedia.org/wikipedia/en/d/dd/The_Persistence_of_Memory.jpg'},
+            {'titulo': 'El Guernica', 'autor': 'Pablo Picasso', 'img': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Mural_del_Gernika.jpg/500px-Mural_del_Gernika.jpg'},
+            {'titulo': 'Impresión, sol naciente', 'autor': 'Claude Monet', 'img': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Monet_-_Impression%2C_Sunrise.jpg/1200px-Monet_-_Impression%2C_Sunrise.jpg'},
+        ],
+        # Datos para el Museo con ID = 2
+        2: [
+            {'titulo': 'La joven de la perla', 'autor': 'Johannes Vermeer', 'img': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/1665_Girl_with_a_Pearl_Earring.jpg/800px-1665_Girl_with_a_Pearl_Earring.jpg'},
+            {'titulo': 'La ronda de noche', 'autor': 'Rembrandt', 'img': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/La_ronda_de_noche%2C_por_Rembrandt_van_Rijn.jpg/500px-La_ronda_de_noche%2C_por_Rembrandt_van_Rijn.jpg'},
+            {'titulo': 'El jardín de las delicias', 'autor': 'El Bosco', 'img': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/El_jard%C3%ADn_de_las_Delicias%2C_de_El_Bosco.jpg/1200px-El_jard%C3%ADn_de_las_Delicias%2C_de_El_Bosco.jpg'},
+        ]
+    }
+
+    # Obtenemos las obras para el museo actual, o una lista vacía si no está definido
+    obras_simuladas = datos_simulados_museos.get(museo_id, [])
+
+    context = {
+        'museo': museo,
+        'obras_simuladas': obras_simuladas,
+    }
     return render(request, 'catalogo/catalogo_museo_externo.html', context)

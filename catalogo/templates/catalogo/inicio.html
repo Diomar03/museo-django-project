@@ -1,26 +1,47 @@
 {% extends 'catalogo/base.html' %}
 {% load static %}
+
 {% block title %}Bienvenido - {{ block.super }}{% endblock %}
+
 {% block content %}
+
+<style>
+    .carousel-item { 
+        cursor: pointer; 
+        max-height: 450px;
+    }
+    .carousel-item img {
+        object-fit: cover;
+        height: 450px;
+        width: 100%;
+    }
+    .carousel-caption { 
+        background-color: rgba(0, 0, 0, 0.5); 
+        border-radius: 0.5rem; 
+        padding: 1rem; 
+    }
+</style>
 
 <div id="exhibitionCarousel" class="carousel slide" data-bs-ride="carousel">
   <div class="carousel-inner" style="border-radius: 15px;">
     <div class="carousel-item active">
-      <img src="{% static 'catalogo/bienvenida.jpg' %}" class="d-block w-100" alt="Bienvenida al Museo" style="max-height: 400px; object-fit: cover;">
+      <img src="{% static 'catalogo/bienvenida.jpg' %}" class="d-block w-100" alt="Bienvenida al Museo">
       <div class="carousel-caption d-none d-md-block">
         <h1>Te damos la Bienvenida al Museo de Arte</h1>
         <p>Un espacio donde la historia y la creatividad convergen.</p>
       </div>
     </div>
 
-    {% for exhibicion in exhibiciones %}
-    <div class="carousel-item">
-      {% if exhibicion.imagen %}
-      <img src="{{ exhibicion.imagen.url }}" class="d-block w-100" alt="{{ exhibicion.nombre }}" style="max-height: 400px; object-fit: cover;">
+    {% for id, data in exhibiciones_data.items %}
+    <div class="carousel-item" data-bs-toggle="modal" data-bs-target="#exhibicionModal" data-ex-id="{{ id }}">
+      {% if data.imagen_url %}
+      <img src="{{ data.imagen_url }}" class="d-block w-100" alt="{{ data.nombre }}">
+      {% else %}
+      <img src="https://via.placeholder.com/1200x450.png/6c757d/FFFFFF?text=Exhibici%C3%B3n" class="d-block w-100" alt="{{ data.nombre }}">
       {% endif %}
       <div class="carousel-caption d-none d-md-block">
-        <h5>{{ exhibicion.nombre }}</h5>
-        <p>{{ exhibicion.descripcion }} (Del {{ exhibicion.fecha_inicio|date:"d/m" }} al {{ exhibicion.fecha_fin|date:"d/m" }})</p>
+        <h1>{{ data.nombre }}</h1>
+        <p>{{ data.descripcion }}</p>
       </div>
     </div>
     {% endfor %}
@@ -37,20 +58,97 @@
 
 <div class="mt-5">
   <h2 class="text-center mb-4">Nuevas Adquisiciones</h2>
-  <div class="row row-cols-1 row-cols-md-3 row-cols-lg-6 g-4">
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-4">
     {% for obra in obras_recientes %}
       <div class="col">
         <div class="card h-100 shadow-sm">
           <a href="{% url 'detalle_obra' pk=obra.pk %}">
+            {% if obra.imagen %}
             <img src="{{ obra.imagen.url }}" class="card-img-top" alt="{{ obra.titulo }}" style="height: 150px; object-fit: cover;">
+            {% else %}
+            <div class="d-flex align-items-center justify-content-center bg-light" style="height: 150px;">
+                <span class="text-muted small">Sin imagen</span>
+            </div>
+            {% endif %}
           </a>
           <div class="card-body p-2 text-center">
             <h6 class="card-title small mb-0">{{ obra.titulo }}</h6>
           </div>
         </div>
       </div>
+    {% empty %}
+      <div class="col-12"><p class="text-center">No hay nuevas adquisiciones para mostrar.</p></div>
     {% endfor %}
   </div>
 </div>
+
+
+<div class="modal fade" id="exhibicionModal" tabindex="-1" aria-labelledby="exhibicionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h1 class="modal-title fs-4" id="modal-titulo"></h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <p id="modal-descripcion" class="lead fs-6"></p>
+        <p id="modal-fechas" class="text-muted small"></p>
+        <hr>
+        <h6>Obras en esta exhibición:</h6>
+        <ul id="modal-lista-obras" class="list-group list-group-flush">
+          </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ exhibiciones_data|json_script:"exhibiciones-data-json" }}
+
+<script>
+// Leemos los datos de forma segura desde la etiqueta de script que Django generó
+const exhibiciones_js_data = JSON.parse(document.getElementById('exhibiciones-data-json').textContent);
+
+const exhibicionModal = document.getElementById('exhibicionModal');
+if (exhibicionModal) {
+    exhibicionModal.addEventListener('show.bs.modal', function (event) {
+        const carouselItem = event.relatedTarget;
+        if (!carouselItem || !carouselItem.hasAttribute('data-ex-id')) {
+            event.preventDefault();
+            return;
+        }
+
+        const exhibicionId = carouselItem.getAttribute('data-ex-id');
+        const data = exhibiciones_js_data[exhibicionId];
+        
+        if (!data) return;
+
+        // Seleccionamos los elementos del modal para rellenarlos
+        const modalTitle = exhibicionModal.querySelector('#modal-titulo');
+        const modalDescripcion = exhibicionModal.querySelector('#modal-descripcion');
+        const modalFechas = exhibicionModal.querySelector('#modal-fechas');
+        const modalListaObras = exhibicionModal.querySelector('#modal-lista-obras');
+
+        // Rellenamos el modal con los datos correctos
+        modalTitle.textContent = data.nombre;
+        modalDescripcion.textContent = data.descripcion;
+        modalFechas.textContent = `Vigente del ${data.fecha_inicio} al ${data.fecha_fin}`;
+        
+        modalListaObras.innerHTML = ''; // Limpiamos la lista anterior
+        if (data.obras.length > 0) {
+            data.obras.forEach(obra => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = `${obra.titulo} - por ${obra.autor}`;
+                modalListaObras.appendChild(li);
+            });
+        } else {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.textContent = 'No hay obras específicas listadas para esta exhibición.';
+            modalListaObras.appendChild(li);
+        }
+    });
+}
+</script>
 
 {% endblock %}

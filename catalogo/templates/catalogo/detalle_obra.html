@@ -25,31 +25,47 @@
 
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item d-flex justify-content-between px-0">
+                        <strong>Tipo de Obra:</strong>
+                        <span>{{ obra.get_tipo_obra_display }}</span>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between px-0">
                         <strong>Periodo:</strong>
                         <span>{{ obra.periodo.nombre }}</span>
                     </li>
+
                     <li class="list-group-item d-flex justify-content-between px-0">
-                        <strong>Estilo:</strong>
-                        <span>{{ obra.estilo.nombre }}</span>
+                        <strong>Estilo(s):</strong>
+                        <span>
+                            {% for estilo_obj in obra.estilo.all %}
+                                {{ estilo_obj.nombre }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </span>
                     </li>
+
                     {% if obra.tipo_obra == 'CU' %}
                         <li class="list-group-item d-flex justify-content-between px-0">
-                            <strong>Técnica:</strong>
-                            <span>{{ obra.tecnica.nombre }}</span>
+                            <strong>Técnica(s):</strong>
+                            <span>
+                                {% for tecnica_obj in obra.tecnica.all %}
+                                    {{ tecnica_obj.nombre }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </span>
                         </li>
                     {% elif obra.tipo_obra == 'ES' %}
                         <li class="list-group-item d-flex justify-content-between px-0">
-                            <strong>Material:</strong>
-                            <span>{{ obra.material.nombre }}</span>
+                            <strong>Material(es):</strong>
+                            <span>
+                                {% for material_obj in obra.material.all %}
+                                    {{ material_obj.nombre }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </span>
                         </li>
                     {% endif %}
+
                     <li class="list-group-item d-flex justify-content-between px-0">
                         <strong>Fecha de Creación:</strong>
                         <span>{{ obra.fecha_creacion }}</span>
-                    </li>
-                     <li class="list-group-item d-flex justify-content-between px-0">
-                        <strong>Valoración:</strong>
-                        <span>S/ {{ obra.valoracion_economica|floatformat:2 }}</span>
                     </li>
                 </ul>
 

@@ -10,7 +10,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container">
-        <a class="navbar-brand" href="{% url 'inicio' %}">MUSEO DE ARTE</a>
+        <span class="navbar-brand">MUSEO DE ARTE</span>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -35,8 +35,10 @@
         {% endblock %}
     </main>
 
-    <footer class="text-center text-muted mt-5 mb-3">
-        <p>&copy; {% now "Y" %} Museo de Arte. Todos los derechos reservados.</p>
+    <footer class="text-center text-light bg-dark mt-5 py-4">
+        <div class="container">
+            <p class="mb-0">&copy; {% now "Y" %} Museo de Arte. Todos los derechos reservados.</p>
+        </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
